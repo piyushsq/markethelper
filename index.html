@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Price Calculator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    button, select, input {
+      font-size: 16px;
+      padding: 10px;
+      margin: 6px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .item {
+      background: white;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .item-header {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      gap: 10px;
+    }
+
+    .remove-btn {
+      background-color: #e74c3c;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .add-btn {
+      background-color: #2ecc71;
+      padding: 6px 10px;
+      border-radius: 5px;
+    }
+
+    .add-btn.disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    .total {
+      text-align: right;
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+
+    .clear-btn {
+      background-color: #e67e22;
+      margin-top: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .row input {
+      flex: 1;
+    }
+
+    .total-line {
+      font-weight: bold;
+      margin-top: 6px;
+    }
+
+    .inactive {
+      color: grey;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🥭 Price Calculator</h1>
+
+  <div class="row">
+    <button onclick="addItem()">➕ Add Item</button>
+    <select id="weightUnit" onchange="recalculateAll()">
+      <option value="kg" selected>Weight in kg</option>
+      <option value="g">Weight in grams</option>
+    </select>
+  </div>
+
+  <div id="itemsContainer"></div>
+
+  <div class="total" id="grandTotal">Grand Total: ₹0</div>
+  <button class="clear-btn" onclick="clearAll()">Clear All</button>
+
+  <script>
+    let items = [];
+    let itemCount = 0;
+
+    function addItem() {
+      itemCount++;
+      items.push({
+        name: `Item ${itemCount}`,
+        weight: 1.0,
+        rate: 100,
+        total: 100,
+        added: false
+      });
+      renderItems();
+    }
+
+    function renderItems() {
+      const container = document.getElementById('itemsContainer');
+      container.innerHTML = '';
+
+      let grandTotal = 0;
+
+      items.forEach((item, index) => {
+        const unit = document.getElementById('weightUnit').value;
+        const weightValue = unit === 'g' ? item.weight * 1000 : item.weight;
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item';
+
+        itemDiv.innerHTML = `
+          <div class="item-header">Item ${index + 1}</div>
+
+          <label>Item Name</label>
+          <input type="text" value="${item.name}" onchange="items[${index}].name = this.value" />
+
+          <label>Weight (${unit})</label>
+          <input type="number" step="0.01" value="${weightValue}" 
+            onchange="updateWeight(${index}, this.value)" />
+
+          <label>Price per kg (₹)</label>
+          <input type="number" step="0.01" value="${item.rate}" 
+            onchange="items[${index}].rate = parseFloat(this.value) || 0; recalculateItem(${index})" />
+
+          <div class="item-footer">
+            <div class="total-line ${item.added ? '' : 'inactive'}">
+              Total: ₹${item.total.toFixed(2)}
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="add-btn ${item.added ? 'disabled' : ''}" 
+                onclick="addToGrand(${index})" ${item.added ? 'disabled' : ''}>✔ Add</button>
+              <button class="remove-btn" onclick="removeItem(${index})">❌</button>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(itemDiv);
+
+        if (item.added) grandTotal += item.total;
+      });
+
+      document.getElementById('grandTotal').innerText = `Grand Total: ₹${grandTotal.toFixed(2)}`;
+    }
+
+    function updateWeight(index, value) {
+      const unit = document.getElementById('weightUnit').value;
+      let weight = parseFloat(value) || 0;
+      items[index].weight = unit === 'g' ? weight / 1000 : weight;
+      recalculateItem(index);
+    }
+
+    function recalculateItem(index) {
+      const total = items[index].weight * items[index].rate;
+      items[index].total = +total.toFixed(2);
+      renderItems();
+    }
+
+    function recalculateAll() {
+      items.forEach((_, i) => recalculateItem(i));
+    }
+
+    function addToGrand(index) {
+      if (!items[index].added) {
+        items[index].added = true;
+        recalculateItem(index);
+      }
+    }
+
+    function removeItem(index) {
+      items.splice(index, 1);
+      renderItems();
+    }
+
+    function clearAll() {
+      if (confirm("Clear all items?")) {
+        items = [];
+        itemCount = 0;
+        renderItems();
+      }
+    }
+  </script>
+
+</body>
+</html>
