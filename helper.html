@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Veg/Fruit Price Calculator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+      max-width: 500px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .item-list {
+      margin-top: 20px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .item:last-child {
+      border-bottom: none;
+    }
+    .remove-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .total {
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 10px;
+      text-align: right;
+    }
+    .clear-btn {
+      background: #e67e22;
+      margin-top: 10px;
+    }
+    .flex-row {
+      display: flex;
+      gap: 10px;
+    }
+    .flex-row > * {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🥭 Price Calculator</h1>
+
+  <input type="text" id="itemName" placeholder="Item name (e.g., Banana)" />
+
+  <div class="flex-row">
+    <input type="number" id="itemWeight" step="0.01" placeholder="Weight in kg" />
+    <select id="weightUnit" onchange="updateWeightPlaceholder()">
+      <option value="kg" selected>kg</option>
+      <option value="g">g</option>
+    </select>
+  </div>
+
+  <input type="number" id="itemRate" step="0.01" placeholder="Price per kg (₹)" />
+  <button onclick="addItem()">Add Item</button>
+
+  <div class="item-list" id="itemsContainer"></div>
+
+  <div class="total" id="grandTotal">Grand Total: ₹0</div>
+  <button class="clear-btn" onclick="clearAll()">Clear All</button>
+
+  <script>
+    let items = [];
+
+    function updateWeightPlaceholder() {
+      const unit = document.getElementById('weightUnit').value;
+      const weightInput = document.getElementById('itemWeight');
+      weightInput.placeholder = `Weight in ${unit}`;
+    }
+
+    function addItem() {
+      const name = document.getElementById('itemName').value.trim();
+      let weight = parseFloat(document.getElementById('itemWeight').value);
+      const rate = parseFloat(document.getElementById('itemRate').value);
+      const unit = document.getElementById('weightUnit').value;
+
+      if (!name || isNaN(weight) || isNaN(rate) || weight <= 0 || rate <= 0) {
+        alert("Please enter valid name, weight, and rate.");
+        return;
+      }
+
+      // Convert grams to kg if needed
+      if (unit === "g") {
+        weight = weight / 1000;
+      }
+
+      const total = +(weight * rate).toFixed(2);
+
+      items.push({ name, weight, rate, total });
+      renderItems();
+
+      // Clear inputs
+      document.getElementById('itemName').value = '';
+      document.getElementById('itemWeight').value = '';
+      document.getElementById('itemRate').value = '';
+    }
+
+    function renderItems() {
+      const container = document.getElementById('itemsContainer');
+      container.innerHTML = '';
+
+      let grandTotal = 0;
+
+      items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <div>${index + 1}. ${item.name} - ${item.weight.toFixed(2)}kg @ ₹${item.rate}/kg = ₹${item.total}</div>
+          <button class="remove-btn" onclick="removeItem(${index})">❌</button>
+        `;
+        container.appendChild(div);
+
+        grandTotal += item.total;
+      });
+
+      document.getElementById('grandTotal').innerText = `Grand Total: ₹${grandTotal.toFixed(2)}`;
+    }
+
+    function removeItem(index) {
+      items.splice(index, 1);
+      renderItems();
+    }
+
+    function clearAll() {
+      if (confirm("Clear all items?")) {
+        items = [];
+        renderItems();
+      }
+    }
+  </script>
+
+</body>
+</html>
