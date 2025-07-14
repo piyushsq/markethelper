@@ -1,11 +1,13 @@
 const CACHE_NAME = 'market-helper-v1';
+const BASE_URL = '/markethelper/';
+
 const URLS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/service-worker.js',
-  '/icon-192.png',
-  '/icon-512.png'
+  `${BASE_URL}`,
+  `${BASE_URL}index.html`,
+  `${BASE_URL}manifest.json`,
+  `${BASE_URL}service-worker.js`,
+  `${BASE_URL}icon-192.png`,
+  `${BASE_URL}icon-512.png`
 ];
 
 // Install event
@@ -18,13 +20,17 @@ self.addEventListener('install', event => {
 // Fetch event
 self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
-    // Always serve index.html for navigation (like refresh)
+    // Serve index.html from cache on navigation (like refresh)
     event.respondWith(
-      caches.match('/index.html').then(response => response || fetch('/index.html'))
+      caches.match(`${BASE_URL}index.html`).then(response =>
+        response || fetch(event.request)
+      )
     );
   } else {
     event.respondWith(
-      caches.match(event.request).then(response => response || fetch(event.request))
+      caches.match(event.request).then(response =>
+        response || fetch(event.request)
+      )
     );
   }
 });
